@@ -337,3 +337,19 @@ async function initialize() {
 }
 
 initialize();
+console.log("WEAR SHARE app.js loaded");
+
+supabase
+  .from("listings")
+  .select("id")
+  .limit(1)
+  .then(({ data, error }) => {
+    if (error) {
+      console.error("Supabase connection test failed:", error.message);
+      showMessage("データベース接続を確認できませんでした。", true);
+    } else {
+      console.log("Supabase connection test succeeded:", data);
+      showMessage("データベースとの接続に成功しました。");
+    }
+  });
+
