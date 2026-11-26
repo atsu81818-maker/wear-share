@@ -1,1 +1,383 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+
+:root {
+  --black: #101010;
+  --white: #ffffff;
+  --gray: #777777;
+  --light: #f5f4f1;
+  --accent: #b89b70;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  color: var(--black);
+  background: var(--white);
+  line-height: 1.7;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button, input, textarea, select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.header {
+  height: 76px;
+  padding: 0 7%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.logo span {
+  color: var(--accent);
+}
+
+.header nav {
+  display: flex;
+  gap: 30px;
+  font-size: 13px;
+}
+
+.header nav a:hover {
+  color: var(--accent);
+}
+
+.hero {
+  min-height: 590px;
+  display: flex;
+  align-items: center;
+  padding: 80px 10%;
+  color: white;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.78), rgba(0,0,0,.12)),
+    url('https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1800&q=85')
+    center/cover;
+}
+
+.hero-content {
+  max-width: 600px;
+}
+
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+
+.hero h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(42px, 7vw, 76px);
+  line-height: 1.35;
+  margin-bottom: 22px;
+}
+
+.hero-content > p:not(.eyebrow) {
+  margin-bottom: 35px;
+  color: #eeeeee;
+}
+
+.primary-button,
+.secondary-button {
+  display: inline-block;
+  border: none;
+  padding: 14px 28px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: .2s;
+}
+
+.primary-button {
+  color: white;
+  background: var(--black);
+}
+
+.hero .primary-button {
+  background: var(--accent);
+  color: white;
+}
+
+.primary-button:hover,
+.secondary-button:hover {
+  opacity: .8;
+}
+
+.secondary-button {
+  background: #eeeeee;
+  color: var(--black);
+}
+
+.section {
+  padding: 100px 9%;
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  margin-bottom: 35px;
+}
+
+.section h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1.4;
+}
+
+.subtext {
+  color: var(--gray);
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+
+.search-area {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 35px;
+}
+
+.search-area input {
+  flex: 1;
+}
+
+.search-area button {
+  border: none;
+  background: var(--black);
+  color: white;
+  padding: 0 25px;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 25px;
+}
+
+.product-card {
+  border: 1px solid #eeeeee;
+  background: white;
+  overflow: hidden;
+}
+
+.product-card img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  display: block;
+  background: var(--light);
+}
+
+.product-info {
+  padding: 18px;
+}
+
+.product-info h3 {
+  font-size: 15px;
+  margin: 5px 0;
+}
+
+.product-info p {
+  font-size: 12px;
+  color: var(--gray);
+}
+
+.product-price {
+  margin-top: 12px;
+  color: var(--black) !important;
+  font-weight: 700;
+}
+
+.about {
+  background: var(--light);
+}
+
+.about > p:not(.eyebrow) {
+  max-width: 600px;
+  margin-top: 25px;
+  color: #555;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 35px;
+  margin-top: 60px;
+}
+
+.features strong {
+  color: var(--accent);
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+}
+
+.features h3 {
+  margin: 12px 0;
+}
+
+.features p {
+  font-size: 13px;
+  color: var(--gray);
+}
+
+.account {
+  background: white;
+}
+
+.auth-card {
+  max-width: 550px;
+  margin-top: 30px;
+  padding: 35px;
+  border: 1px solid #e5e5e5;
+}
+
+.auth-card h3 {
+  margin-bottom: 20px;
+}
+
+.form-divider {
+  height: 1px;
+  background: #eeeeee;
+  margin: 35px 0;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+input, textarea, select {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid #dddddd;
+  background: white;
+  border-radius: 0;
+  outline: none;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent);
+}
+
+form button {
+  margin-top: 15px;
+}
+
+.message {
+  margin-top: 15px;
+  font-size: 13px;
+}
+
+.listing-section {
+  background: var(--light);
+}
+
+.listing-form {
+  max-width: 600px;
+  margin-top: 30px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.footer {
+  padding: 55px 9%;
+  background: var(--black);
+  color: white;
+}
+
+.footer > p {
+  color: #aaaaaa;
+  font-size: 12px;
+  margin-top: 10px;
+}
+
+.copyright {
+  margin-top: 30px !important;
+}
+
+@media (max-width: 700px) {
+  .header {
+    height: auto;
+    padding: 18px 5%;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .header nav {
+    width: 100%;
+    gap: 15px;
+    flex-wrap: wrap;
+    font-size: 11px;
+  }
+
+  .hero {
+    min-height: 500px;
+    padding: 60px 7%;
+  }
+
+  .section {
+    padding: 70px 6%;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .product-info {
+    padding: 12px;
+  }
+
+  .features {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+
+  .auth-card {
+    padding: 22px;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+}

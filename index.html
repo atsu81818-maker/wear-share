@@ -1,1 +1,152 @@
 
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101010">
+  <title>WEAR SHARE | ファッションをシェアする</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header">
+  <a class="logo" href="#">WEAR SHARE<span>.</span></a>
+  <nav>
+    <a href="#products">商品を探す</a>
+    <a href="#about">サービスについて</a>
+    <a href="#account">マイアカウント</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="hero-content">
+      <p class="eyebrow">FASHION SHARING PLATFORM</p>
+      <h1>好きな服を、<br>もっと自由に。</h1>
+      <p>誰かのクローゼットが、あなたの新しいスタイルになる。</p>
+      <a class="primary-button" href="#products">服を探す</a>
+    </div>
+  </section>
+
+  <section class="section" id="products">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">DISCOVER</p>
+        <h2>新着アイテム</h2>
+      </div>
+      <span class="subtext">NEW COLLECTION</span>
+    </div>
+
+    <div class="search-area">
+      <input id="searchInput" type="search" placeholder="ブランド・商品名で検索">
+      <button id="searchButton">検索</button>
+    </div>
+
+    <div id="productList" class="product-grid">
+      <p>商品を読み込んでいます...</p>
+    </div>
+  </section>
+
+  <section class="section about" id="about">
+    <p class="eyebrow">ABOUT WEAR SHARE</p>
+    <h2>持っている服を、<br>新しい価値に。</h2>
+    <p>
+      WEAR SHAREは、個人が所有するファッションアイテムを
+      必要な期間だけレンタルできるサービスを目指しています。
+    </p>
+    <div class="features">
+      <div><strong>01</strong><h3>探す</h3><p>お気に入りのアイテムを見つける。</p></div>
+      <div><strong>02</strong><h3>借りる</h3><p>必要な期間だけレンタルする。</p></div>
+      <div><strong>03</strong><h3>シェアする</h3><p>自分の服も出品できる。</p></div>
+    </div>
+  </section>
+
+  <section class="section account" id="account">
+    <p class="eyebrow">MEMBER ACCOUNT</p>
+    <h2>アカウント</h2>
+
+    <div id="authArea" class="auth-card">
+      <h3>新規会員登録</h3>
+      <form id="signupForm">
+        <label for="signupName">表示名</label>
+        <input id="signupName" type="text" required maxlength="40" placeholder="表示名">
+
+        <label for="signupEmail">メールアドレス</label>
+        <input id="signupEmail" type="email" required placeholder="メールアドレス">
+
+        <label for="signupPassword">パスワード</label>
+        <input id="signupPassword" type="password" required minlength="8" placeholder="8文字以上">
+
+        <button class="primary-button" type="submit">新規登録</button>
+      </form>
+
+      <div class="form-divider"></div>
+
+      <h3>ログイン</h3>
+      <form id="loginForm">
+        <label for="loginEmail">メールアドレス</label>
+        <input id="loginEmail" type="email" required placeholder="メールアドレス">
+
+        <label for="loginPassword">パスワード</label>
+        <input id="loginPassword" type="password" required placeholder="パスワード">
+
+        <button class="secondary-button" type="submit">ログイン</button>
+      </form>
+    </div>
+
+    <div id="profileArea" class="auth-card hidden">
+      <h3>ログイン中</h3>
+      <p id="userEmail"></p>
+      <button id="logoutButton" class="secondary-button">ログアウト</button>
+    </div>
+
+    <p id="authMessage" class="message" aria-live="polite"></p>
+  </section>
+
+  <section class="section listing-section">
+    <p class="eyebrow">SELL YOUR STYLE</p>
+    <h2>あなたの服を出品する</h2>
+    <p>会員登録・ログイン後に出品申請ができます。</p>
+
+    <form id="listingForm" class="listing-form">
+      <label for="listingTitle">商品名</label>
+      <input id="listingTitle" required maxlength="100" placeholder="例：ウールコート">
+
+      <label for="listingBrand">ブランド</label>
+      <input id="listingBrand" maxlength="80" placeholder="ブランド名">
+
+      <label for="listingSize">サイズ</label>
+      <input id="listingSize" maxlength="30" placeholder="例：M">
+
+      <label for="listingCondition">商品の状態</label>
+      <select id="listingCondition" required>
+        <option value="">選択してください</option>
+        <option value="新品">新品</option>
+        <option value="未使用に近い">未使用に近い</option>
+        <option value="目立った傷や汚れなし">目立った傷や汚れなし</option>
+        <option value="やや傷や汚れあり">やや傷や汚れあり</option>
+      </select>
+
+      <label for="listingPrice">1日あたりのレンタル希望価格（円）</label>
+      <input id="listingPrice" type="number" min="1" max="1000000" required>
+
+      <label for="listingDescription">商品説明</label>
+      <textarea id="listingDescription" rows="4" maxlength="2000"></textarea>
+
+      <button class="primary-button" type="submit">出品申請</button>
+    </form>
+
+    <div id="myListings"></div>
+  </section>
+</main>
+
+<footer class="footer">
+  <a class="logo" href="#">WEAR SHARE<span>.</span></a>
+  <p>Share fashion. Share possibilities.</p>
+  <p class="copyright">© 2026 WEAR SHARE</p>
+</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
