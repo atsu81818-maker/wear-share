@@ -55,15 +55,19 @@ $("signupForm").addEventListener("submit", async (event) => {
 
   showMessage("会員登録中...");
 
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        display_name: displayName
-      }
+
+const { data, error } = await supabase.auth.signUp({
+  email,
+  password,
+  options: {
+    emailRedirectTo:
+      "https://atsu81818-maker.github.io/wear-share/",
+    data: {
+      display_name: displayName
     }
-  });
+  }
+});
+
 
   if (error) {
     showMessage(error.message, true);
