@@ -343,25 +343,23 @@ function renderProducts(products) {
 }
 
 // 自分の出品一覧
+
+// 自分の出品一覧・編集機能
 async function loadMyListings() {
   if (!currentUser) return;
 
   const container = $("myListings");
-
   container.textContent = "出品商品を読み込んでいます...";
 
   const { data, error } = await supabase
     .from("listings")
-    .select("id, title, daily_price, status, created_at")
+    .select("id, title, brand, size, condition, daily_price, description, status, created_at")
     .eq("seller_id", currentUser.id)
     .order("created_at", { ascending: false });
 
   if (error) {
     console.error("My listings error:", error);
-
-    container.textContent =
-      "出品一覧を取得できませんでした。";
-
+    container.textContent = "出品一覧を取得できませんでした。";
     return;
   }
 
@@ -369,13 +367,11 @@ async function loadMyListings() {
 
   const heading = document.createElement("h3");
   heading.textContent = "あなたの出品商品";
-
   container.append(heading);
 
   if (!data || data.length === 0) {
     const empty = document.createElement("p");
     empty.textContent = "まだ出品商品はありません。";
-
     container.append(empty);
     return;
   }
@@ -385,7 +381,7 @@ async function loadMyListings() {
     row.className = "product-info";
 
     const title = document.createElement("h3");
-    title.textContent = item.title;
+    title.textContent = item.title || "商品名未設定";
 
     const price = document.createElement("p");
     price.textContent =
@@ -394,7 +390,6 @@ async function loadMyListings() {
       " / 日";
 
     const status = document.createElement("p");
-
     status.textContent =
       "状態：" +
       (item.status === "active"
@@ -406,9 +401,141 @@ async function loadMyListings() {
             : "下書き");
 
     row.append(title, price, status);
+
+    if (item.status === "draft") {
+      const editButton = document.createElement("button");
+      editButton.type = "button";
+      editButton.textContent = "商品を編集";
+
+      editButton.addEventListener("click", () => {
+        showListingEditForm(item, row);
+      });
+
+      row.append(editButton);
+    }
+
     container.append(row);
   });
 }
+
+// 商品編集フォーム
+function showListingEditForm(item, row) {
+  const oldForm = row.querySelector(".listing-edit-form");
+  if (oldForm) {
+    oldForm.remove();
+    return;
+  }
+
+  const form = document.createElement("form");
+  form.className = "listing-edit-form";
+
+  const fields = [
+    { label: "商品名", name: "title", value: item.title || "", type: "text" },
+    { label: "ブランド", name: "brand", value: item.brand || "", type: "text" },
+    { label: "サイズ", name: "size", value: item.size || "", type: "text" },
+    { label: "状態", name: "condition", value: item.condition || "", type: "text" },
+    { label: "1日あたりの価格", name: "daily_price", value: item.daily_price || "", type: "number" }
+  ];
+
+  fields.forEach((field) => {
+    const label = document.createElement("label");
+    label.textContent = field.label;
+
+    const input = document.createElement("input");
+    input.name = field.name;
+    input.type = field.type;
+    input.value = field.value;
+    input.required = field.name === "title" || field.name === "daily_price";
+
+    if (field.name === "daily_price") {
+      input.min = "1";
+      input.max = "1000000";
+      input.step = "1";
+    }
+
+    label.append(input);
+    form.append(label);
+  });
+
+  const descriptionLabel = document.createElement("label");
+  descriptionLabel.textContent = "商品説明";
+
+  const description = document.createElement("textarea");
+  description.name = "description";
+  description.value = item.description || "";
+
+  descriptionLabel.append(description);
+  form.append(descriptionLabel);
+
+  const saveButton = document.createElement("button");
+  saveButton.type = "submit";
+  saveButton.textContent = "変更を保存";
+
+  const cancelButton = document.createElement("button");
+  cancelButton.type = "button";
+  cancelButton.textContent = "キャンセル";
+  cancelButton.addEventListener("click", () => form.remove());
+
+  form.append(saveButton, cancelButton);
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!currentUser) {
+      showMessage("ログインしてください。", true);
+      return;
+    }
+
+    const formData = new FormData(form);
+    const dailyPrice = Number(formData.get("daily_price"));
+
+    if (
+      !Number.isSafeInteger(dailyPrice) ||
+      dailyPrice <= 0 ||
+      dailyPrice > 1000000
+    ) {
+      showMessage("価格を確認してください。", true);
+      return;
+    }
+
+    saveButton.disabled = true;
+    saveButton.textContent = "保存中...";
+
+    try {
+      const { error } = await supabase
+        .from("listings")
+        .update({
+          title: String(formData.get("title")).trim(),
+          brand: String(formData.get("brand")).trim(),
+          size: String(formData.get("size")).trim(),
+          condition: String(formData.get("condition")).trim(),
+          daily_price: dailyPrice,
+          description: String(formData.get("description")).trim()
+        })
+        .eq("id", item.id)
+        .eq("seller_id", currentUser.id)
+        .eq("status", "draft");
+
+      if (error) {
+        console.error("Listing update error:", error);
+        showMessage("更新できませんでした。権限や入力内容を確認してください。", true);
+        return;
+      }
+
+      showMessage("商品情報を更新しました。");
+      await loadMyListings();
+    } catch (error) {
+      console.error(error);
+      showMessage("通信エラーが発生しました。", true);
+    } finally {
+      saveButton.disabled = false;
+      saveButton.textContent = "変更を保存";
+    }
+  });
+
+  row.append(form);
+}
+
 
 // 出品申請
 $("listingForm").addEventListener("submit", async (event) => {
@@ -582,7 +709,6 @@ async function testDatabaseConnection() {
   }
 
   console.log("データベース接続成功:", data);
-  alert("データベース接続成功！");
-}
+  alert("データベース接続成功
 
 testDatabaseConnection();
