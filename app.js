@@ -12,12 +12,27 @@ const supabase = createClient(
 const $ = (id) => document.getElementById(id);
 
 let currentUser = null;
+let authMessageTimer = null;
+
+const REDIRECT_URL =
+  "https://atsu81818-maker.github.io/wear-share/";
 
 // メッセージ表示
 function showMessage(message, isError = false) {
   const element = $("authMessage");
+
+  if (!element) return;
+
   element.textContent = message;
-  element.style.color = isError ? "#c0392b" : "#27834a";
+  element.style.color = isError ? "#e07878" : "#d8c7a0";
+
+  clearTimeout(authMessageTimer);
+
+  authMessageTimer = setTimeout(() => {
+    if (element.textContent === message) {
+      element.textContent = "";
+    }
+  }, 10000);
 }
 
 // ログイン状態に合わせて画面を切り替える
@@ -27,17 +42,23 @@ function updateAuthUI(user) {
   $("authArea").classList.toggle("hidden", !!user);
   $("profileArea").classList.toggle("hidden", !user);
 
-  $("userEmail").textContent = user
-    ? user.email
-    : "";
+  $("listingFormArea").classList.toggle("hidden", !user);
 
-  $("listingForm").classList.toggle("hidden", !user);
+  $("userEmail").textContent = user
+    ? user.email || ""
+    : "";
 
   if (user) {
     loadMyListings();
   } else {
-    $("myListings").innerHTML = "";
+    $("myListings").replaceChildren();
   }
+}
+
+// ボタンの送信状態
+function setButtonLoading(button, loading, normalText, loadingText) {
+  button.disabled = loading;
+  button.textContent = loading ? loadingText : normalText;
 }
 
 // 会員登録
@@ -47,38 +68,120 @@ $("signupForm").addEventListener("submit", async (event) => {
   const displayName = $("signupName").value.trim();
   const email = $("signupEmail").value.trim();
   const password = $("signupPassword").value;
+  const button = event.submitter;
 
   if (!displayName || !email || password.length < 8) {
     showMessage("入力内容を確認してください。", true);
     return;
   }
 
+  if (button) {
+    setButtonLoading(button, true, "会員登録する →", "登録中...");
+  }
+
   showMessage("会員登録中...");
 
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: REDIRECT_URL,
+        data: {
+          display_name: displayName
+        }
+      }
+    });
 
-const { data, error } = await supabase.auth.signUp({
-  email,
-  password,
-  options: {
-    emailRedirectTo:
-      "https://atsu81818-maker.github.io/wear-share/",
-    data: {
-      display_name: displayName
+    if (error) {
+      console.error("Signup error:", error.message);
+      showMessage(
+        "会員登録できませんでした。入力内容を確認してください。",
+        true
+      );
+      return;
+    }
+
+    if (data.session) {
+      showMessage("会員登録が完了しました。");
+    } else {
+      $("resendEmail").value = email;
+
+      showMessage(
+        "確認メールを送信しました。メールを確認してください。"
+      );
+    }
+
+  } catch (error) {
+    console.error(error);
+    showMessage("通信エラーが発生しました。", true);
+
+  } finally {
+    if (button) {
+      setButtonLoading(
+        button,
+        false,
+        "会員登録する →",
+        "登録中..."
+      );
     }
   }
 });
 
+// 確認メールの再送信
+$("resendForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
 
-  if (error) {
-    showMessage(error.message, true);
+  const email = $("resendEmail").value.trim();
+  const button = $("resendButton");
+
+  if (!email) {
+    showMessage("メールアドレスを入力してください。", true);
     return;
   }
 
-  if (data.session) {
-    showMessage("会員登録が完了しました。");
-  } else {
+  setButtonLoading(
+    button,
+    true,
+    "確認メールを再送信",
+    "送信中..."
+  );
+
+  showMessage("確認メールを再送信しています...");
+
+  try {
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: {
+        emailRedirectTo: REDIRECT_URL
+      }
+    });
+
+    if (error) {
+      console.error("Resend error:", error.message);
+
+      showMessage(
+        "再送信できませんでした。時間をおいて再度お試しください。",
+        true
+      );
+      return;
+    }
+
     showMessage(
-      "確認メールを送信しました。メール内のリンクを確認してください。"
+      "再送信処理を受け付けました。メールボックスを確認してください。"
+    );
+
+  } catch (error) {
+    console.error(error);
+    showMessage("通信エラーが発生しました。", true);
+
+  } finally {
+    setButtonLoading(
+      button,
+      false,
+      "確認メールを再送信",
+      "送信中..."
     );
   }
 });
@@ -89,39 +192,75 @@ $("loginForm").addEventListener("submit", async (event) => {
 
   const email = $("loginEmail").value.trim();
   const password = $("loginPassword").value;
+  const button = event.submitter;
+
+  if (button) {
+    setButtonLoading(button, true, "ログイン →", "ログイン中...");
+  }
 
   showMessage("ログイン中...");
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
+  try {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
 
-  if (error) {
-    showMessage("ログインできませんでした。入力内容を確認してください。", true);
-    return;
+    if (error) {
+      console.error("Login error:", error.message);
+
+      showMessage(
+        "ログインできませんでした。メールアドレスとパスワードを確認してください。",
+        true
+      );
+      return;
+    }
+
+    showMessage("ログインしました。");
+
+  } catch (error) {
+    console.error(error);
+    showMessage("通信エラーが発生しました。", true);
+
+  } finally {
+    if (button) {
+      setButtonLoading(button, false, "ログイン →", "ログイン中...");
+    }
   }
-
-  showMessage("ログインしました。");
 });
 
 // ログアウト
 $("logoutButton").addEventListener("click", async () => {
-  const { error } = await supabase.auth.signOut();
+  const button = $("logoutButton");
 
-  if (error) {
-    showMessage("ログアウトに失敗しました。", true);
-    return;
+  button.disabled = true;
+
+  try {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error(error);
+      showMessage("ログアウトに失敗しました。", true);
+      return;
+    }
+
+    showMessage("ログアウトしました。");
+
+  } catch (error) {
+    console.error(error);
+    showMessage("通信エラーが発生しました。", true);
+
+  } finally {
+    button.disabled = false;
   }
-
-  showMessage("ログアウトしました。");
 });
 
 // 商品一覧の取得
 async function loadProducts() {
   const container = $("productList");
 
-  container.innerHTML = "<p>商品を読み込んでいます...</p>";
+  container.innerHTML =
+    '<p class="empty-message">商品を読み込んでいます...</p>';
 
   const { data, error } = await supabase
     .from("listings")
@@ -130,13 +269,18 @@ async function loadProducts() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    container.textContent = "商品を読み込めませんでした。";
-    console.error(error);
+    console.error("Product load error:", error);
+
+    container.innerHTML =
+      '<p class="empty-message">商品を読み込めませんでした。</p>';
+
     return;
   }
 
   if (!data || data.length === 0) {
-    container.innerHTML = "<p>現在、公開中の商品はありません。</p>";
+    container.innerHTML =
+      '<p class="empty-message">現在、公開中の商品はありません。</p>';
+
     return;
   }
 
@@ -146,24 +290,35 @@ async function loadProducts() {
 // 商品表示
 function renderProducts(products) {
   const container = $("productList");
+
   container.replaceChildren();
 
-  products.forEach((product) => {
+  if (!products.length) {
+    container.innerHTML =
+      '<p class="empty-message">該当する商品がありません。</p>';
+    return;
+  }
+
+  products.forEach((product, index) => {
     const card = document.createElement("article");
     card.className = "product-card";
+    card.style.animationDelay = `${Math.min(index * 0.08, 0.4)}s`;
 
     const image = document.createElement("img");
-    image.alt = product.title;
+    image.alt = product.title || "商品画像";
     image.loading = "lazy";
 
-    // 画像アップロード機能は次の段階で実装する
-    image.src = product.image_path || "";
+    if (product.image_path) {
+      image.src = product.image_path;
+    } else {
+      image.style.display = "none";
+    }
 
     const info = document.createElement("div");
     info.className = "product-info";
 
     const title = document.createElement("h3");
-    title.textContent = product.title;
+    title.textContent = product.title || "商品名未設定";
 
     const brand = document.createElement("p");
     brand.textContent = product.brand || "ブランド未設定";
@@ -177,7 +332,9 @@ function renderProducts(products) {
     const price = document.createElement("p");
     price.className = "product-price";
     price.textContent =
-      "¥" + Number(product.daily_price).toLocaleString("ja-JP") + " / 日";
+      "¥" +
+      Number(product.daily_price).toLocaleString("ja-JP") +
+      " / 日";
 
     info.append(title, brand, size, condition, price);
     card.append(image, info);
@@ -190,6 +347,7 @@ async function loadMyListings() {
   if (!currentUser) return;
 
   const container = $("myListings");
+
   container.textContent = "出品商品を読み込んでいます...";
 
   const { data, error } = await supabase
@@ -199,8 +357,11 @@ async function loadMyListings() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    container.textContent = "出品一覧を取得できませんでした。";
-    console.error(error);
+    console.error("My listings error:", error);
+
+    container.textContent =
+      "出品一覧を取得できませんでした。";
+
     return;
   }
 
@@ -208,11 +369,13 @@ async function loadMyListings() {
 
   const heading = document.createElement("h3");
   heading.textContent = "あなたの出品商品";
+
   container.append(heading);
 
   if (!data || data.length === 0) {
     const empty = document.createElement("p");
     empty.textContent = "まだ出品商品はありません。";
+
     container.append(empty);
     return;
   }
@@ -231,6 +394,7 @@ async function loadMyListings() {
       " / 日";
 
     const status = document.createElement("p");
+
     status.textContent =
       "状態：" +
       (item.status === "active"
@@ -262,6 +426,8 @@ $("listingForm").addEventListener("submit", async (event) => {
   const dailyPrice = Number($("listingPrice").value);
   const description = $("listingDescription").value.trim();
 
+  const button = event.submitter;
+
   if (
     !title ||
     !condition ||
@@ -273,54 +439,110 @@ $("listingForm").addEventListener("submit", async (event) => {
     return;
   }
 
+  if (button) {
+    setButtonLoading(
+      button,
+      true,
+      "出品情報を保存する →",
+      "保存中..."
+    );
+  }
+
   showMessage("出品申請を送信しています...");
 
-  const { error } = await supabase
-    .from("listings")
-    .insert({
-      seller_id: currentUser.id,
-      title,
-      brand,
-      size,
-      condition,
-      daily_price: dailyPrice,
-      description,
-      status: "draft"
-    });
+  try {
+    const { error } = await supabase
+      .from("listings")
+      .insert({
+        seller_id: currentUser.id,
+        title,
+        brand,
+        size,
+        condition,
+        daily_price: dailyPrice,
+        description,
+        status: "draft"
+      });
 
-  if (error) {
-    showMessage("出品申請に失敗しました。", true);
+    if (error) {
+      console.error("Listing error:", error);
+
+      showMessage(
+        "出品申請に失敗しました。入力内容を確認してください。",
+        true
+      );
+
+      return;
+    }
+
+    $("listingForm").reset();
+
+    showMessage("出品情報を下書きとして保存しました。");
+
+    await loadMyListings();
+
+  } catch (error) {
     console.error(error);
-    return;
+    showMessage("通信エラーが発生しました。", true);
+
+  } finally {
+    if (button) {
+      setButtonLoading(
+        button,
+        false,
+        "出品情報を保存する →",
+        "保存中..."
+      );
+    }
   }
-
-  $("listingForm").reset();
-
-  showMessage("出品情報を下書きとして保存しました。");
-  await loadMyListings();
 });
 
-// 検索
+// 商品検索
 $("searchButton").addEventListener("click", async () => {
   const keyword = $("searchInput").value.trim().toLowerCase();
+  const button = $("searchButton");
 
-  const { data, error } = await supabase
-    .from("listings")
-    .select("id, title, brand, size, condition, daily_price, image_path")
-    .eq("status", "active")
-    .order("created_at", { ascending: false });
+  button.disabled = true;
+  button.textContent = "検索中...";
 
-  if (error) {
-    showMessage("検索に失敗しました。", true);
-    return;
+  try {
+    const { data, error } = await supabase
+      .from("listings")
+      .select("id, title, brand, size, condition, daily_price, image_path")
+      .eq("status", "active")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error(error);
+      showMessage("検索に失敗しました。", true);
+      return;
+    }
+
+    const filtered = (data || []).filter((item) => {
+      const text =
+        `${item.title || ""} ${item.brand || ""}`.toLowerCase();
+
+      return text.includes(keyword);
+    });
+
+    renderProducts(filtered);
+
+  } catch (error) {
+    console.error(error);
+    showMessage("通信エラーが発生しました。", true);
+
+  } finally {
+    button.disabled = false;
+    button.textContent = "SEARCH";
   }
+});
 
-  const filtered = (data || []).filter((item) => {
-    const text = `${item.title} ${item.brand || ""}`.toLowerCase();
-    return text.includes(keyword);
-  });
-
-  renderProducts(filtered);
+// Enterキーでも検索できるようにする
+$("searchInput").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    $("searchButton").click();
+  }
 });
 
 // 認証状態の監視
@@ -333,27 +555,15 @@ async function initialize() {
   const { data, error } = await supabase.auth.getSession();
 
   if (error) {
+    console.error("Session error:", error);
     showMessage("ログイン状態を確認できませんでした。", true);
   }
 
   updateAuthUI(data?.session?.user || null);
+
   await loadProducts();
+
+  console.log("WEAR SHARE initialized.");
 }
 
 initialize();
-console.log("WEAR SHARE app.js loaded");
-
-supabase
-  .from("listings")
-  .select("id")
-  .limit(1)
-  .then(({ data, error }) => {
-    if (error) {
-      console.error("Supabase connection test failed:", error.message);
-      showMessage("データベース接続を確認できませんでした。", true);
-    } else {
-      console.log("Supabase connection test succeeded:", data);
-      showMessage("データベースとの接続に成功しました。");
-    }
-  });
-
