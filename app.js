@@ -567,3 +567,22 @@ async function initialize() {
 }
 
 initialize();
+async function testDatabaseConnection() {
+  console.log("データベース接続テスト開始");
+
+  const { data, error } = await supabase
+    .from("listings")
+    .select("id")
+    .limit(1);
+
+  if (error) {
+    console.error("データベース接続失敗:", error);
+    alert("接続失敗: " + error.message);
+    return;
+  }
+
+  console.log("データベース接続成功:", data);
+  alert("データベース接続成功！");
+}
+
+testDatabaseConnection();
